@@ -3,7 +3,7 @@ import cors from "cors";
 import fetch from "node-fetch";
 
 const app = express();
-app.use(cors()); // ← 解鎖所有瀏覽器請求
+app.use(cors());           // ← 解鎖所有瀏覽器請求
 app.use(express.json());
 
 // 讀取環境變數
