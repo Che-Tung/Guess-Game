@@ -3,7 +3,7 @@ import cors from "cors";
 import fetch from "node-fetch";
 
 const app = express();
-app.use(cors());           // ← 解鎖所有瀏覽器請求
+app.use(cors()); // ← 解鎖所有瀏覽器請求
 app.use(express.json());
 
 // 讀取環境變數
@@ -22,7 +22,7 @@ app.post("/gpt", async (req, res) => {
         Authorization: `Bearer ${OPENAI_KEY}`,
       },
       body: JSON.stringify({
-        model: "gpt-4",
+        model: "gpt-4o",
         messages: [
           { role: "system", content: "你是一個題庫產生器，只回覆題目本身。" },
           { role: "user", content: prompt },
