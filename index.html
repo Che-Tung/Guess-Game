@@ -5,25 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Real-World Charades Game</title>
 
-<!-- 文青配色 + Noto Sans TC 字體 -->
+<!-- 字體 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&display=swap" rel="stylesheet">
 
 <style>
-/* ───── 基本排版 ───── */
+/* ─── 全域排版 ─── */
 *{box-sizing:border-box;margin:0;padding:0}
 body{
   font-family:"Noto Sans TC",Arial,Helvetica,sans-serif;
-  background:#F9F6F2;               /* 柔米白 */
-  color:#34424A;                     /* 深灰藍文字 */
-  min-height:100vh;
+  background:#F9F6F2;     /* 柔米白 */
+  color:#34424A;           /* 深灰藍 */
   display:flex;justify-content:center;align-items:center;
+  min-height:100vh;
 }
 
-/* ───── 主要卡片 ───── */
+/* ─── 主要卡片 ─── */
 #game-container{
-  background:#FFFFFFCC;              /* 半透明白 */
+  background:#FFFFFFCC;               /* 半透明白 */
   backdrop-filter:blur(4px);
   border:1px solid #E5E5E5;
   border-radius:16px;
@@ -35,35 +35,42 @@ body{
 }
 #game-container:hover{box-shadow:0 12px 32px rgba(0,0,0,.08)}
 
-/* ───── 文字與表單 ───── */
+/* ─── 表單與標題 ─── */
 h2{font-weight:700;margin-bottom:20px;font-size:1.5rem}
 label{display:block;margin:14px 0 6px;font-size:.95rem;color:#6B7A80}
 select{
-  width:100%;padding:10px 12px;border:1px solid #CCC;border-radius:8px;font-size:.95rem;background:#FAFAFA;color:#333;
+  width:100%;padding:10px 12px;border:1px solid #CCC;
+  border-radius:8px;font-size:.95rem;background:#FAFAFA;color:#333;
 }
 
-/* ───── 遊戲區 ───── */
+/* ─── 遊戲區 ─── */
 #top-bar{display:flex;justify-content:space-between;font-size:1.1rem;margin-bottom:26px;font-weight:700}
 #question{font-size:1.6rem;min-height:72px;margin:32px 0;color:#2F3B42}
 
-/* ───── 按鈕 ───── */
+/* ─── 按鈕 ─── */
 button{
   padding:12px 26px;margin:10px;border:none;border-radius:24px;
   font-size:1rem;font-weight:600;cursor:pointer;
-  transition:transform .15s ease,box-shadow .15s ease
+  transition:transform .15s,box-shadow .15s;
 }
-button:active{transform:scale(.97)}
 button:hover{box-shadow:0 4px 12px rgba(0,0,0,.12)}
+button:active{transform:scale(.97)}
 
-#start-btn{background:#6B8E8F;color:#FFF}     /* 鼠尾草綠 */
-.correct  {background:#4CAF50;color:#FFF}
-.pass     {background:#D2995B;color:#FFF}
+#start-btn{background:#6B8E8F;color:#FFF}
+
+.correct,.pass{            /* 兩個主要動作按鈕放大 */
+  padding:16px 32px;
+  font-size:1.15rem;
+}
+.correct{background:#4CAF50;color:#FFF}
+.pass   {background:#D2995B;color:#FFF}
 </style>
 </head>
 
 <body>
   <div id="game-container">
-    <!-- ─── 設定畫面 ─── -->
+
+    <!-- ─── 遊戲設定 ─── -->
     <div id="setup">
       <h2>開始新遊戲</h2>
 
@@ -86,7 +93,7 @@ button:hover{box-shadow:0 4px 12px rgba(0,0,0,.12)}
       <button id="start-btn">開始</button>
     </div>
 
-    <!-- ─── 遊戲畫面 ─── -->
+    <!-- ─── 正式遊戲 ─── -->
     <div id="game" style="display:none;">
       <div id="top-bar">
         <span id="timer">0</span>
@@ -98,16 +105,15 @@ button:hover{box-shadow:0 4px 12px rgba(0,0,0,.12)}
       <button class="correct" id="correct-btn">答對</button>
       <button class="pass"    id="pass-btn">Pass</button>
     </div>
+
   </div>
 
 <script>
-/* ───────── 資料結構 ───────── */
-let questionBank={},       // 讀入整份題庫
-    remaining={};          // 尚未出現的題目
+/* ─── 題庫載入 ─── */
+let questionBank={},remaining={};
 let currentCategory="daily",score=0,timeLeft=0,timerInterval=null;
 const $=id=>document.getElementById(id);
 
-/* ───────── 載入題庫 ───────── */
 async function loadBank(){
   const res=await fetch("questions.json");
   if(!res.ok)throw new Error("題庫載入失敗");
@@ -115,7 +121,7 @@ async function loadBank(){
   for(const k in questionBank)remaining[k]=[...questionBank[k]];
 }
 
-/* ───────── 隨機題目 ───────── */
+/* ─── 出題與重複控制 ─── */
 function randomQ(){
   let list=remaining[currentCategory];
   if(list.length===0){
@@ -130,7 +136,7 @@ function randomQ(){
 }
 function nextQuestion(){ $("question").textContent=randomQ(); }
 
-/* ───────── 計時 ───────── */
+/* ─── 倒數計時 ─── */
 function tick(){
   timeLeft--; $("timer").textContent=`${timeLeft} 秒`;
   if(timeLeft<=0){
@@ -140,10 +146,10 @@ function tick(){
   }
 }
 
-/* ───────── 事件 ───────── */
+/* ─── 事件 ─── */
 $("start-btn").onclick=async()=>{
-  currentCategory=$("category-select").value;
-  timeLeft=parseInt($("time-select").value,10);
+  currentCategory=$( "category-select").value;
+  timeLeft=parseInt($( "time-select").value,10);
   score=0; $("score").textContent=score; $("timer").textContent=`${timeLeft} 秒`;
 
   try{ await loadBank(); }catch(e){ alert(e.message); return; }
