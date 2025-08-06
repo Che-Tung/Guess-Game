@@ -1,228 +1,103 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Real‑World Charades Game</title>
-    <style>
-      /* === 基本排版 === */
-      * {
-        box-sizing: border-box;
-      }
-      body {
-        font-family: Arial, Helvetica, sans-serif;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        margin: 0;
-        background: #f5f5f5;
-      }
-      #game-container {
-        background: #fff;
-        padding: 24px 32px;
-        border-radius: 14px;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
-        width: 92%;
-        max-width: 420px;
-        text-align: center;
-      }
-      h2 {
-        margin-top: 0;
-      }
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Real-World Charades Game</title>
+<style>
+*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#f5f5f5}
+#game-container{background:#fff;padding:24px 32px;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.12);width:92%;max-width:420px;text-align:center}
+#top-bar{display:flex;justify-content:space-between;font-size:1.2rem;margin-bottom:24px}
+#question{font-size:1.6rem;min-height:70px;margin:28px 0}
+button{padding:12px 22px;margin:10px;border:none;border-radius:8px;font-size:1rem;cursor:pointer}
+.correct{background:#4caf50;color:#fff}.pass{background:#ff9800;color:#fff}
+label{display:block;margin:10px 0 4px;text-align:left}select{width:100%;padding:8px 10px;border:1px solid #ccc;border-radius:6px;font-size:1rem}
+</style>
+</head>
+<body>
+<div id="game-container">
+  <div id="setup">
+    <h2>開始新遊戲</h2>
+    <label>選擇主題：</label>
+    <select id="category-select">
+      <option value="daily">生活用品</option>
+      <option value="movie">影視作品</option>
+      <option value="idiom">成語</option>
+      <option value="lyrics">歌詞</option>
+    </select>
 
-      #top-bar {
-        display: flex;
-        justify-content: space-between;
-        font-size: 1.2rem;
-        margin-bottom: 24px;
-      }
-      #question {
-        font-size: 1.6rem;
-        min-height: 70px;
-        line-height: 1.4;
-        margin: 28px 0;
-      }
-      button {
-        padding: 12px 22px;
-        margin: 10px;
-        border: none;
-        border-radius: 8px;
-        font-size: 1rem;
-        cursor: pointer;
-      }
-      .correct {
-        background: #4caf50;
-        color: #fff;
-      }
-      .pass {
-        background: #ff9800;
-        color: #fff;
-      }
-      .loading {
-        opacity: 0.6;
-        pointer-events: none;
-      }
+    <label>遊戲時間：</label>
+    <select id="time-select">
+      <option value="90">90 秒</option>
+      <option value="120">120 秒</option>
+      <option value="150">150 秒</option>
+      <option value="180">180 秒</option>
+    </select>
 
-      label {
-        display: block;
-        margin: 10px 0 4px;
-        text-align: left;
-      }
-      select {
-        width: 100%;
-        padding: 8px 10px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        font-size: 1rem;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="game-container">
-      <!-- ─── 遊戲設定畫面 ─── -->
-      <div id="setup">
-        <h2>開始新遊戲</h2>
-        <label>選擇主題：</label>
-        <select id="category-select">
-          <option value="daily">生活用品</option>
-          <option value="movie">影視作品</option>
-          <option value="idiom">成語</option>
-          <option value="lyrics">歌詞</option>
-        </select>
+    <button id="start-btn">開始</button>
+  </div>
 
-        <label>遊戲時間：</label>
-        <select id="time-select">
-          <option value="90">90 秒</option>
-          <option value="120">120 秒</option>
-          <option value="150">150 秒</option>
-          <option value="180">180 秒</option>
-        </select>
-
-        <button id="start-btn">開始</button>
-      </div>
-
-      <!-- ─── 正式遊戲畫面 ─── -->
-      <div id="game" style="display: none">
-        <div id="top-bar">
-          <span id="timer">0</span>
-          <span>答對：<span id="score">0</span></span>
-        </div>
-        <div id="question">題目</div>
-        <button class="correct" id="correct-btn">答對</button>
-        <button class="pass" id="pass-btn">Pass</button>
-      </div>
+  <div id="game" style="display:none;">
+    <div id="top-bar">
+      <span id="timer">0</span>
+      <span>答對：<span id="score">0</span></span>
     </div>
+    <div id="question">題目</div>
+    <button class="correct" id="correct-btn">答對</button>
+    <button class="pass" id="pass-btn">Pass</button>
+  </div>
+</div>
 
-    <script>
-      /***** 1. 題庫（本地備用） *****/
-      const localQuestions = {
-        daily: ["牙刷"],
-        movie: ["不可能的任務"],
-        idiom: ["指鹿為馬"],
-        lyrics: ["小幸運"],
-      };
+<script>
+let questionBank={},remaining={};
+let currentCategory="daily",score=0,timeLeft=0,timerInterval=null;
 
-      /***** 2. GPT Prompt 模板 *****/
-      const gptPrompts = {
-        daily:
-          "請依據日常生活用品這個主題，隨機產生 30 個名詞 (繁體中文，逗號分隔)。僅回傳名詞列表，不要多餘說明。",
-        movie:
-          "請依據經典影視作品 (電影/影集) 主題，隨機產生 30 個台灣常見譯名 (逗號分隔)。僅回傳名稱列表。",
-        idiom: "請隨機產生 30 個常用四字成語 (逗號分隔)。僅回傳成語列表。",
-        lyrics: "請隨機產生 30 首華語流行歌曲歌名 (逗號分隔)。僅回傳歌名列表。",
-      };
+const $=id=>document.getElementById(id);
+const setupDiv=$("setup"),gameDiv=$("game"),timerSpan=$("timer"),
+      scoreSpan=$("score"),questionDiv=$("question");
 
-      /***** 3. 全域狀態 *****/
-      let currentCategory = "daily";
-      let score = 0;
-      let timeLeft = 0;
-      let timerInterval = null;
-      let useGPT = true; // 一律嘗試 GPT，失敗自動 fallback
+async function loadBank(){
+  const res=await fetch("questions.json");
+  if(!res.ok)throw new Error("題庫載入失敗");
+  questionBank=await res.json();
+  for(const k in questionBank)remaining[k]=[...questionBank[k]];
+}
 
-      /***** 4. DOM *****/
-      const setupDiv = document.getElementById("setup");
-      const gameDiv = document.getElementById("game");
-      const timerSpan = document.getElementById("timer");
-      const scoreSpan = document.getElementById("score");
-      const questionDiv = document.getElementById("question");
-      const startBtn = document.getElementById("start-btn");
-      const correctBtn = document.getElementById("correct-btn");
-      const passBtn = document.getElementById("pass-btn");
+function randomQ(){
+  let list=remaining[currentCategory];
+  if(list.length===0){
+    alert("題庫已用完，重新洗牌！");
+    remaining[currentCategory]=[...questionBank[currentCategory]];
+    list=remaining[currentCategory];
+  }
+  const idx=Math.floor(Math.random()*list.length);
+  const q=list[idx];
+  list.splice(idx,1);
+  return q;
+}
 
-      /***** 5. GPT 請求（經由 Render Proxy） *****/
-      async function fetchGPTQuestion(prompt) {
-        const res = await fetch("/gpt", {
-          // ← 改抓自己後端
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt }),
-        });
-        if (!res.ok) throw new Error("proxy error");
-        const { text } = await res.json();
-        return text;
-      }
+function nextQuestion(){ questionDiv.textContent=randomQ(); }
 
-      /***** 6. 將 GPT 回傳拆成陣列並抽一題 *****/
-      function pickRandom(text) {
-        const arr = text.split(/[,，\n\s]+/).filter(Boolean); // 逗號或換行分隔
-        return arr[Math.floor(Math.random() * arr.length)] || "(格式錯誤)";
-      }
+function tick(){
+  timeLeft--; timerSpan.textContent=`${timeLeft} 秒`;
+  if(timeLeft<=0){
+    clearInterval(timerInterval);
+    alert(`時間到！你答對了 ${score} 題`);
+    location.reload();
+  }
+}
 
-      /***** 7. 題目產生器 *****/
-      async function nextQuestion() {
-        questionDiv.textContent = "載入中…";
-        if (useGPT) {
-          try {
-            const raw = await fetchGPTQuestion(gptPrompts[currentCategory]);
-            questionDiv.textContent = pickRandom(raw);
-          } catch (e) {
-            console.warn("GPT 失敗，使用本地題庫", e);
-            questionDiv.textContent = getRandomLocal();
-            useGPT = false; // 後續都用本地
-          }
-        } else {
-          questionDiv.textContent = getRandomLocal();
-        }
-      }
-      function getRandomLocal() {
-        const list = localQuestions[currentCategory];
-        return list[Math.floor(Math.random() * list.length)];
-      }
+$("start-btn").onclick=async()=>{
+  currentCategory=$("category-select").value;
+  timeLeft=parseInt($("time-select").value,10);
+  score=0; scoreSpan.textContent=score; timerSpan.textContent=`${timeLeft} 秒`;
+  try{ await loadBank(); }catch(e){ alert(e.message); return; }
+  setupDiv.style.display="none"; gameDiv.style.display="block";
+  nextQuestion(); timerInterval=setInterval(tick,1000);
+};
 
-      /***** 8. 倒數計時 *****/
-      function updateTimer() {
-        timeLeft--;
-        timerSpan.textContent = `${timeLeft} 秒`;
-        if (timeLeft <= 0) {
-          clearInterval(timerInterval);
-          alert(`時間到！你答對了 ${score} 題`);
-          location.reload();
-        }
-      }
-
-      /***** 9. 事件綁定 *****/
-      startBtn.addEventListener("click", () => {
-        currentCategory = document.getElementById("category-select").value;
-        timeLeft = parseInt(document.getElementById("time-select").value, 10);
-
-        score = 0;
-        scoreSpan.textContent = score;
-        timerSpan.textContent = `${timeLeft} 秒`;
-
-        setupDiv.style.display = "none";
-        gameDiv.style.display = "block";
-
-        nextQuestion();
-        timerInterval = setInterval(updateTimer, 1000);
-      });
-
-      correctBtn.addEventListener("click", () => {
-        score++;
-        scoreSpan.textContent = score;
-        nextQuestion();
-      });
-      passBtn.addEventListener("click", () => nextQuestion());
-    </script>
-  </body>
+$("correct-btn").onclick=()=>{ score++; scoreSpan.textContent=score; nextQuestion(); };
+$("pass-btn").onclick=nextQuestion;
+</script>
+</body>
 </html>
